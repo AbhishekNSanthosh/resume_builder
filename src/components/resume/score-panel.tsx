@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +16,6 @@ type Score = {
 
 export function ScorePanel() {
   const { data } = useResumeStore();
-  const score = useServerFn(scoreResume);
   const [jd, setJd] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Score | null>(null);
@@ -26,7 +24,7 @@ export function ScorePanel() {
     setLoading(true);
     try {
       const text = resumeToText(data);
-      const res = await score({ data: { resumeText: text, jobDescription: jd || undefined } });
+      const res = await scoreResume({ resumeText: text, jobDescription: jd || undefined });
       setResult(res);
     } finally { setLoading(false); }
   }

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Sparkles, Plus, X, Loader2, Lightbulb } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -25,8 +24,6 @@ function AIButton({ onClick, loading, label = "Improve with AI" }: { onClick: ()
 
 export function ResumeForm() {
   const { data, set } = useResumeStore();
-  const improve = useServerFn(improveText);
-  const suggest = useServerFn(suggestSkills);
   const [loading, setLoading] = useState<string | null>(null);
 
   async function aiImprove(field: "summary", mode: "summary") {
@@ -34,7 +31,7 @@ export function ResumeForm() {
     if (!text?.trim()) return toast.error("Write a draft first, then I'll polish it.");
     setLoading(field);
     try {
-      const { text: out } = await improve({ data: { text, mode, context: data.title } });
+      const { text: out } = await improveText({ text, mode, context: data.title });
       set({ [field]: out } as Partial<typeof data>);
       toast.success("Rewritten");
     } catch (e) {
@@ -49,8 +46,10 @@ export function ResumeForm() {
     const raw = exp.bullets.join("\n") || `${exp.role} at ${exp.company}`;
     setLoading(`exp-${expIndex}`);
     try {
-      const { text: out } = await improve({
-        data: { text: raw, mode: "bullet", context: `${exp.role} at ${exp.company}` },
+      const { text: out } = await improveText({
+        text: raw,
+        mode: "bullet",
+        context: `${exp.role} at ${exp.company}`,
       });
       const lines = out.split("\n").map((s) => s.replace(/^[-•*]\s*/, "").trim()).filter(Boolean);
       const next = [...data.experience];
@@ -69,8 +68,10 @@ export function ResumeForm() {
     if (!p.description.trim()) return toast.error("Add a short description first.");
     setLoading(`proj-${idx}`);
     try {
-      const { text: out } = await improve({
-        data: { text: p.description, mode: "project", context: p.name },
+      const { text: out } = await improveText({
+        text: p.description,
+        mode: "project",
+        context: p.name,
       });
       const next = [...data.projects];
       next[idx] = { ...p, description: out };
@@ -86,7 +87,7 @@ export function ResumeForm() {
     if (!data.title.trim()) return toast.error("Add your role/title at the top first.");
     setLoading("skills");
     try {
-      const res = await suggest({ data: { role: data.title } });
+      const res = await suggestSkills({ role: data.title });
       set({
         skills: {
           technical: Array.from(new Set([...data.skills.technical, ...res.technical])),

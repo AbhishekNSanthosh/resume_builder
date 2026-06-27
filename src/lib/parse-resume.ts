@@ -10,18 +10,7 @@ export async function extractTextFromFile(file: File): Promise<string> {
 
 async function extractFromPdf(file: File): Promise<string> {
   const pdfjs = await import("pdfjs-dist");
-  try {
-    const worker = new Worker(
-      new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url),
-      { type: "module" },
-    );
-    (pdfjs.GlobalWorkerOptions as { workerPort?: Worker }).workerPort = worker;
-  } catch (err) {
-    console.warn("[parse-resume] worker init failed, falling back to main-thread", err);
-    // Fallback: disable worker so pdfjs runs on the main thread
-    const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
-    pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-  }
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
   const buf = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: new Uint8Array(buf) }).promise;
   let text = "";
